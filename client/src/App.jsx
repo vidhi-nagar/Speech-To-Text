@@ -126,7 +126,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/upload",
+        "https://speech-to-text-backend-rouge.vercel.app/api/upload",
         formData,
       );
       setResult(response.data);
@@ -142,7 +142,7 @@ function App() {
     if (!user) return;
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/history?userId=${user.id}`,
+        `https://speech-to-text-backend-rouge.vercel.app/api/history?userId=${user.id}`,
       );
       setHistory(res.data);
     } catch (err) {
