@@ -17,7 +17,13 @@ const app = express();
 const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://speech-to-text-dcdl.vercel.app"],
+    methods: ["GET", "POST"],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
