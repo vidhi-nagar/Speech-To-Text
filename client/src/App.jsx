@@ -71,20 +71,39 @@ function App() {
 
   // --- Recording & Upload Logic (Same as your code) ---
   const startRecording = async () => {
-    setLiveTranscript(""); // Clearing previous text
+    setLiveTranscript("");
     setResult(null);
+    setError("");
+
     try {
+      // 1. Mic Permission Check
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // 2. Speech Recognition Check
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert(
+          "Aapka browser live typing support nahi karta. Please Chrome use karein.",
+        );
+        return;
+      }
+
+      // 3. Initialize Recognition (IMPORTANT: Shuru mein hi karein)
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = sourceLang;
+
+      // 4. MediaRecorder Setup
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      recognition.onstart = () => {
-        console.log("Speech recognition service has started");
       };
 
       mediaRecorder.onstop = () => {
@@ -95,68 +114,33 @@ function App() {
         setFile(recordedFile);
       };
 
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert(
-          "Aapka browser live typing support nahi karta. Please Chrome use karein.",
-        );
-        return;
-      }
-
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = true;
-      recognition.interimResults = true; // Yeh bahut zaroori hai live typing ke liye
-      recognition.lang = sourceLang;
-
-      recognition.onend = () => {
-        if (isRecording && recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            console.log("Mic restart ignored");
-          }
-        }
-      };
-
-      // Is code ko apne recognition.onresult se replace karein
+      // 5. Live Transcription Logic (The Fix)
       recognition.onresult = (event) => {
-        let finalTranscript = "";
-
+        let transcript = "";
         for (let i = 0; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          // Agar result final hai toh handle karein, varna interim (kachha) text dikhayein
-          finalTranscript += transcript;
+          transcript += event.results[i][0].transcript;
         }
-
-        // Console mein check karein ki data aa raha hai ya nahi
-        console.log("Live Text:", finalTranscript);
-
-        // Direct state update
-        setLiveTranscript(finalTranscript);
+        console.log("Captured Text:", transcript); // Debugging ke liye
+        setLiveTranscript(transcript);
       };
 
-      recognition.onspeechend = () => {
-        console.log("Speech ended, but keeping recognition alive...");
+      recognition.onstart = () => {
+        console.log("Mic is now listening...");
       };
 
-      // Jab bolna band karein tab recognition restart na ho, isliye handle karein
       recognition.onerror = (event) => {
-        if (event.error === "not-allowed") {
-          alert("Mic permission denied! Browser settings check karein.");
-        }
-        console.error("Speech Error:", event.error);
+        console.error("Recognition Error:", event.error);
+        if (event.error === "no-speech") return;
+        setError("Speech recognition error: " + event.error);
       };
 
+      // 6. Start Everything
       mediaRecorder.start();
       recognition.start();
       setIsRecording(true);
-      setResult(null);
-      setLiveTranscript(""); // Shuruat mein screen saaf karein
     } catch (err) {
-      console.error(err);
-      alert("Mic access denied or error occurred!");
+      console.error("Mic Error:", err);
+      alert("Microphone access deny ho gaya hai!");
     }
   };
 
