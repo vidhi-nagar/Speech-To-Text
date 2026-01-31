@@ -83,6 +83,10 @@ function App() {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
+      recognition.onstart = () => {
+        console.log("Speech recognition service has started");
+      };
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         const recordedFile = new File([blob], "recording.webm", {
@@ -116,18 +120,21 @@ function App() {
         }
       };
 
+      // Is code ko apne recognition.onresult se replace karein
       recognition.onresult = (event) => {
-        let combinedText = "";
-        // Mobile par pure array ko loop karke text jodna sabse safe hai
+        let finalTranscript = "";
+
         for (let i = 0; i < event.results.length; i++) {
-          combinedText += event.results[i][0].transcript;
+          const transcript = event.results[i][0].transcript;
+          // Agar result final hai toh handle karein, varna interim (kachha) text dikhayein
+          finalTranscript += transcript;
         }
 
-        // State update jo mobile screen par text dikhayega
-        setLiveTranscript(combinedText);
+        // Console mein check karein ki data aa raha hai ya nahi
+        console.log("Live Text:", finalTranscript);
 
-        // Console mein check karne ke liye (Mobile debugging)
-        console.log("Speech data received:", combinedText);
+        // Direct state update
+        setLiveTranscript(finalTranscript);
       };
 
       recognition.onspeechend = () => {
