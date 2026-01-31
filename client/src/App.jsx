@@ -104,21 +104,20 @@ function App() {
       recognition.interimResults = true; // Yeh bahut zaroori hai live typing ke liye
       recognition.lang = sourceLang;
 
-      recognition.onresult = (event) => {
-        let finalTranscript = "";
-        let interimTranscript = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
-          }
+      recognition.onend = () => {
+        if (isRecording) {
+          recognition.start(); // Auto-restart if still recording
         }
+      };
 
-        // Mobile par live dikhane ke liye dono ko combine karke state update karein
-        setLiveTranscript(finalTranscript + interimTranscript);
+      recognition.onresult = (event) => {
+        let combinedTranscript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          // Hum har result ko utha rahe hain chahe wo final ho ya interim
+          combinedTranscript += event.results[i][0].transcript;
+        }
+        setLiveTranscript(combinedTranscript);
+        console.log("Speech detected:", combinedTranscript);
       };
 
       // Jab bolna band karein tab recognition restart na ho, isliye handle karein
