@@ -111,19 +111,26 @@ function App() {
       };
 
       recognition.onresult = (event) => {
-        let currentText = "";
+        let finalTranscript = "";
+        let interimTranscript = "";
 
-        // Loop jo har tarah ke result ko pakdega
-        for (let i = 0; i < event.results.length; i++) {
-          currentText += event.results[i][0].transcript;
+        // 'event.resultIndex' se loop chalane par mobile processing fast ho jati hai
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
         }
 
-        // 1. Pehle state update karein
-        setLiveTranscript(currentText);
+        // Live state update: Final aur Interim dono ko sath dikhao
+        // Isse mobile par turant text aane lagega
+        setLiveTranscript((prev) => finalTranscript || interimTranscript);
+      };
 
-        // 2. Debugging ke liye (Sirf check karne ke liye ki mic kaam kar raha hai)
-        // Agar ye console mein dikh raha hai, toh screen par bhi aayega
-        console.log("Live Speech:", currentText);
+      recognition.onspeechend = () => {
+        console.log("Speech ended, but keeping recognition alive...");
       };
 
       // Jab bolna band karein tab recognition restart na ho, isliye handle karein
