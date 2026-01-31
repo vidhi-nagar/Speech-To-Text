@@ -19,7 +19,7 @@ const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 // Middleware
 app.use(
   cors({
-    origin: ["https://speech-to-text-dcdl.vercel.app"],
+    origin: ["http://localhost:5173", "https://speech-to-text-dcdl.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
   }),
