@@ -114,12 +114,17 @@ function App() {
 
       // 5. Live Transcription Logic (The Fix)
       recognition.onresult = (event) => {
-        let transcript = "";
+        let combinedText = "";
         for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          // Mobile par transcript nikalne ka sabse stable tarika
+          const transcript = event.results[i][0].transcript;
+          combinedText += transcript;
         }
-        console.log("Captured Text:", transcript); // Debugging ke liye
-        setLiveTranscript(transcript);
+
+        // Debugging ke liye alert daal kar dekhein (sirf testing ke liye)
+        // alert("Detected: " + combinedText);
+
+        setLiveTranscript(combinedText);
       };
 
       recognition.onstart = () => {
@@ -127,9 +132,10 @@ function App() {
       };
 
       recognition.onerror = (event) => {
-        console.error("Recognition Error:", event.error);
-        if (event.error === "no-speech") return;
-        setError("Speech recognition error: " + event.error);
+        console.log("Speech Error:", event.error);
+        if (event.error === "service-not-allowed") {
+          alert("Mobile browser is blocking speech recognition.");
+        }
       };
 
       // 6. Start Everything
