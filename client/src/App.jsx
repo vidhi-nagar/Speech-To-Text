@@ -114,17 +114,12 @@ function App() {
 
       // 5. Live Transcription Logic (The Fix)
       recognition.onresult = (event) => {
-        let combinedText = "";
-        for (let i = 0; i < event.results.length; i++) {
-          // Mobile par transcript nikalne ka sabse stable tarika
-          const transcript = event.results[i][0].transcript;
-          combinedText += transcript;
-        }
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
+          .join("");
 
-        // Debugging ke liye alert daal kar dekhein (sirf testing ke liye)
-        // alert("Detected: " + combinedText);
-
-        setLiveTranscript(combinedText);
+        setLiveTranscript(transcript); // Bina kisi condition ke direct update
       };
 
       recognition.onstart = () => {
