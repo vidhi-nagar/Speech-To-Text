@@ -83,9 +83,7 @@ function App() {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert(
-          "Aapka browser live typing support nahi karta. Please Chrome use karein.",
-        );
+        alert("Your browser does not support Live Typing. Please use Chrome.");
         return;
       }
 
