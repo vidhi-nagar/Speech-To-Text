@@ -76,9 +76,11 @@ function App() {
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
+
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         const recordedFile = new File([blob], "recording.webm", {
@@ -86,26 +88,51 @@ function App() {
         });
         setFile(recordedFile);
       };
+
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert(
+          "Aapka browser live typing support nahi karta. Please Chrome use karein.",
+        );
+        return;
+      }
+
       const recognition = new SpeechRecognition();
       recognitionRef.current = recognition;
       recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.interimResults = true; // Yeh bahut zaroori hai live typing ke liye
       recognition.lang = sourceLang;
+
       recognition.onresult = (event) => {
-        let currentText = "";
-        for (let i = 0; i < event.results.length; i++) {
-          currentText += event.results[i][0].transcript;
+        let finalTranscript = "";
+        let interimTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
         }
-        setLiveTranscript(currentText);
+
+        // Mobile par live dikhane ke liye dono ko combine karke state update karein
+        setLiveTranscript(finalTranscript + interimTranscript);
       };
+
+      // Jab bolna band karein tab recognition restart na ho, isliye handle karein
+      recognition.onerror = (event) =>
+        console.error("Recognition Error:", event.error);
+
       mediaRecorder.start();
       recognition.start();
       setIsRecording(true);
       setResult(null);
+      setLiveTranscript(""); // Shuruat mein screen saaf karein
     } catch (err) {
-      alert("Please allow mic access!");
+      console.error(err);
+      alert("Mic access denied or error occurred!");
     }
   };
 
