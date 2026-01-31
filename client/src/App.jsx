@@ -107,19 +107,27 @@ function App() {
       recognition.lang = sourceLang;
 
       recognition.onend = () => {
-        if (isRecording) {
-          recognition.start(); // Restart recording if still active
+        if (isRecording && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            console.log("Mic restart ignored");
+          }
         }
       };
 
       recognition.onresult = (event) => {
-        let resultText = "";
+        let combinedText = "";
+        // Mobile par pure array ko loop karke text jodna sabse safe hai
         for (let i = 0; i < event.results.length; i++) {
-          // Mobile Chrome ke liye simple concatenation best hai
-          resultText += event.results[i][0].transcript;
+          combinedText += event.results[i][0].transcript;
         }
-        // Isse check karein ki kya text state tak pahunch raha hai
-        setLiveTranscript(resultText);
+
+        // State update jo mobile screen par text dikhayega
+        setLiveTranscript(combinedText);
+
+        // Console mein check karne ke liye (Mobile debugging)
+        console.log("Speech data received:", combinedText);
       };
 
       recognition.onspeechend = () => {
