@@ -71,6 +71,8 @@ function App() {
 
   // --- Recording & Upload Logic (Same as your code) ---
   const startRecording = async () => {
+    setLiveTranscript(""); // Clearing previous text
+    setResult(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -106,27 +108,18 @@ function App() {
 
       recognition.onend = () => {
         if (isRecording) {
-          recognition.start(); // Auto-restart if still recording
+          recognition.start(); // Restart recording if still active
         }
       };
 
       recognition.onresult = (event) => {
-        let finalTranscript = "";
-        let interimTranscript = "";
-
-        // 'event.resultIndex' se loop chalane par mobile processing fast ho jati hai
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
-          }
+        let resultText = "";
+        for (let i = 0; i < event.results.length; i++) {
+          // Mobile Chrome ke liye simple concatenation best hai
+          resultText += event.results[i][0].transcript;
         }
-
-        // Live state update: Final aur Interim dono ko sath dikhao
-        // Isse mobile par turant text aane lagega
-        setLiveTranscript((prev) => finalTranscript || interimTranscript);
+        // Isse check karein ki kya text state tak pahunch raha hai
+        setLiveTranscript(resultText);
       };
 
       recognition.onspeechend = () => {
