@@ -111,18 +111,28 @@ function App() {
       };
 
       recognition.onresult = (event) => {
-        let combinedTranscript = "";
+        let currentText = "";
+
+        // Loop jo har tarah ke result ko pakdega
         for (let i = 0; i < event.results.length; i++) {
-          // Hum har result ko utha rahe hain chahe wo final ho ya interim
-          combinedTranscript += event.results[i][0].transcript;
+          currentText += event.results[i][0].transcript;
         }
-        setLiveTranscript(combinedTranscript);
-        console.log("Speech detected:", combinedTranscript);
+
+        // 1. Pehle state update karein
+        setLiveTranscript(currentText);
+
+        // 2. Debugging ke liye (Sirf check karne ke liye ki mic kaam kar raha hai)
+        // Agar ye console mein dikh raha hai, toh screen par bhi aayega
+        console.log("Live Speech:", currentText);
       };
 
       // Jab bolna band karein tab recognition restart na ho, isliye handle karein
-      recognition.onerror = (event) =>
-        console.error("Recognition Error:", event.error);
+      recognition.onerror = (event) => {
+        if (event.error === "not-allowed") {
+          alert("Mic permission denied! Browser settings check karein.");
+        }
+        console.error("Speech Error:", event.error);
+      };
 
       mediaRecorder.start();
       recognition.start();
